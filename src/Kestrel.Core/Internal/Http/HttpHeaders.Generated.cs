@@ -5862,6 +5862,11 @@ namespace Microsoft.AspNetCore.Server.Kestrel.Core.Internal.Http
 
         protected override void SetValueFast(string key, in StringValues value)
         {
+            if (string.IsNullOrEmpty(key))
+            {
+                throw new InvalidOperationException(CoreStrings.FormatInvalidEmptyHeaderName());
+            }
+
             ValidateHeaderValueCharacters(value);
             switch (key.Length)
             {
@@ -6167,6 +6172,11 @@ namespace Microsoft.AspNetCore.Server.Kestrel.Core.Internal.Http
 
         protected override bool AddValueFast(string key, in StringValues value)
         {
+            if (string.IsNullOrEmpty(key))
+            {
+                throw new InvalidOperationException(CoreStrings.FormatInvalidEmptyHeaderName());
+            }
+
             ValidateHeaderValueCharacters(value);
             switch (key.Length)
             {

@@ -96,6 +96,8 @@ namespace Microsoft.AspNetCore.Server.Kestrel.Core.Tests
         [InlineData("Server]", "Data")]
         [InlineData("Server{", "Data")]
         [InlineData("Server}", "Data")]
+        [InlineData("", "Data")]
+        [InlineData(null, "Data")]
         public void AddingControlOrNonAsciiCharactersToHeadersThrows(string key, string value)
         {
             var responseHeaders = new HttpResponseHeaders();

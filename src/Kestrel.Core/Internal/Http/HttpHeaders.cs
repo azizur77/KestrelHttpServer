@@ -268,14 +268,16 @@ namespace Microsoft.AspNetCore.Server.Kestrel.Core.Internal.Http
 
         public static void ValidateHeaderNameCharacters(string headerCharacters)
         {
-            if (headerCharacters != null)
+            if (string.IsNullOrEmpty(headerCharacters))
             {
-                foreach (var ch in headerCharacters)
+                throw new InvalidOperationException(CoreStrings.FormatInvalidEmptyHeaderName());
+            }
+
+            foreach (var ch in headerCharacters)
+            {
+                if (!HttpCharacters.IsToken(ch))
                 {
-                    if (!HttpCharacters.IsToken(ch))
-                    {
-                        ThrowInvalidHeaderCharacter(ch);
-                    }
+                    ThrowInvalidHeaderCharacter(ch);
                 }
             }
         }
