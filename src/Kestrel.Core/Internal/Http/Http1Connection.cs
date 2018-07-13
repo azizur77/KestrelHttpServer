@@ -274,13 +274,9 @@ namespace Microsoft.AspNetCore.Server.Kestrel.Core.Internal.Http
 
             // This is not complete validation. It is just a quick scan for invalid characters
             // but doesn't check that the target fully matches the URI spec.
-            for (var i = 0; i < target.Length; i++)
+            if (HttpCharacters.IndexOfInvalidAuthorityChar(target) >= 0)
             {
-                var ch = target[i];
-                if (!HttpCharacters.IsAuthority(ch))
-                {
-                    ThrowRequestTargetRejected(target);
-                }
+                ThrowRequestTargetRejected(target);
             }
 
             // The authority-form of request-target is only used for CONNECT

@@ -46,6 +46,10 @@ namespace Microsoft.AspNetCore.Server.Kestrel.Core.Internal.Http
                 {
                     ThrowHeadersReadOnlyException();
                 }
+                if (string.IsNullOrEmpty(key))
+                {
+                    throw new InvalidOperationException(CoreStrings.InvalidEmptyHeaderName);
+                }
                 if (value.Count == 0)
                 {
                     RemoveFast(key);
@@ -171,6 +175,10 @@ namespace Microsoft.AspNetCore.Server.Kestrel.Core.Internal.Http
             {
                 ThrowHeadersReadOnlyException();
             }
+            if (string.IsNullOrEmpty(key))
+            {
+                throw new InvalidOperationException(CoreStrings.InvalidEmptyHeaderName);
+            }
 
             if (value.Count > 0 && !AddValueFast(key, value))
             {
@@ -256,29 +264,20 @@ namespace Microsoft.AspNetCore.Server.Kestrel.Core.Internal.Http
         {
             if (headerCharacters != null)
             {
-                foreach (var ch in headerCharacters)
+                var invalid = HttpCharacters.IndexOfInvalidFieldValueChar(headerCharacters);
+                if (invalid >= 0)
                 {
-                    if (!HttpCharacters.IsFieldValue(ch))
-                    {
-                        ThrowInvalidHeaderCharacter(ch);
-                    }
+                    ThrowInvalidHeaderCharacter(headerCharacters[invalid]);
                 }
             }
         }
 
         public static void ValidateHeaderNameCharacters(string headerCharacters)
         {
-            if (string.IsNullOrEmpty(headerCharacters))
+            var invalid = HttpCharacters.IndexOfInvalidTokenChar(headerCharacters);
+            if (invalid >= 0)
             {
-                throw new InvalidOperationException(CoreStrings.FormatInvalidEmptyHeaderName());
-            }
-
-            foreach (var ch in headerCharacters)
-            {
-                if (!HttpCharacters.IsToken(ch))
-                {
-                    ThrowInvalidHeaderCharacter(ch);
-                }
+                ThrowInvalidHeaderCharacter(headerCharacters[invalid]);
             }
         }
 

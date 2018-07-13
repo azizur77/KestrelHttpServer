@@ -363,6 +363,12 @@ namespace Microsoft.AspNetCore.Server.Kestrel.Core.Internal.Http
             var valueEnd = length - 3;
             var nameEnd = FindEndOfName(headerLine, length);
 
+            // Header name is empty
+            if (nameEnd == 0)
+            {
+                RejectRequestHeader(headerLine, length);
+            }
+
             if (headerLine[valueEnd + 2] != ByteLF)
             {
                 RejectRequestHeader(headerLine, length);
@@ -437,6 +443,8 @@ namespace Microsoft.AspNetCore.Server.Kestrel.Core.Internal.Http
         [MethodImpl(MethodImplOptions.NoInlining)]
         private unsafe Span<byte> GetUnknownMethod(byte* data, int length, out int methodLength)
         {
+            // Enregister array
+            var token = HttpCharacters.Token;
             methodLength = 0;
             for (var i = 0; i < length; i++)
             {
@@ -452,7 +460,7 @@ namespace Microsoft.AspNetCore.Server.Kestrel.Core.Internal.Http
                     methodLength = i;
                     break;
                 }
-                else if (!HttpCharacters.IsToken(ch))
+                else if (ch >= (uint)token.Length || !token[ch])
                 {
                     RejectRequestLine(data, length);
                 }

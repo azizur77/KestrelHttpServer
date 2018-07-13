@@ -403,11 +403,6 @@ namespace Microsoft.AspNetCore.Server.Kestrel.Core.Internal.Http
 
         protected override void SetValueFast(string key, in StringValues value)
         {{{(loop.ClassName == "HttpResponseHeaders" ? @"
-            if (string.IsNullOrEmpty(key))
-            {
-                throw new InvalidOperationException(CoreStrings.FormatInvalidEmptyHeaderName());
-            }
-
             ValidateHeaderValueCharacters(value);" : "")}
             switch (key.Length)
             {{{Each(loop.HeadersByLength, byLength => $@"
@@ -430,11 +425,6 @@ namespace Microsoft.AspNetCore.Server.Kestrel.Core.Internal.Http
 
         protected override bool AddValueFast(string key, in StringValues value)
         {{{(loop.ClassName == "HttpResponseHeaders" ? @"
-            if (string.IsNullOrEmpty(key))
-            {
-                throw new InvalidOperationException(CoreStrings.FormatInvalidEmptyHeaderName());
-            }
-
             ValidateHeaderValueCharacters(value);" : "")}
             switch (key.Length)
             {{{Each(loop.HeadersByLength, byLength => $@"

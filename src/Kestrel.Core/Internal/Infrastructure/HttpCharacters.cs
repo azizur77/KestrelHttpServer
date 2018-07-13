@@ -2,6 +2,7 @@
 // Licensed under the Apache License, Version 2.0. See License.txt in the project root for license information.
 
 using System;
+using System.Runtime.CompilerServices;
 
 namespace Microsoft.AspNetCore.Server.Kestrel.Core.Internal.Infrastructure
 {
@@ -90,16 +91,55 @@ namespace Microsoft.AspNetCore.Server.Kestrel.Core.Internal.Infrastructure
             }
         }
 
-        public static bool IsAuthority(byte c)
-            => Authority[c];
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static int IndexOfInvalidAuthorityChar(Span<byte> s)
+        {
+            var authority = Authority;
 
-        public static bool IsToken(byte c)
-            => Token[c];
+            for (var i = 0; i < s.Length; i++)
+            {
+                var c = s[i];
+                if (c >= (uint)authority.Length || !authority[c])
+                {
+                    return i;
+                }
+            }
 
-        public static bool IsToken(char c)
-            => c <= 0x7f && Token[c];
+            return -1;
+        }
 
-        public static bool IsFieldValue(char c)
-            => c <= 0x7f && FieldValue[c];
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static int IndexOfInvalidTokenChar(string s)
+        {
+            var token = Token;
+
+            for (var i = 0; i < s.Length; i++)
+            {
+                var c = s[i];
+                if (c >= (uint)token.Length || !token[c])
+                {
+                    return i;
+                }
+            }
+
+            return -1;
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static int IndexOfInvalidFieldValueChar(string s)
+        {
+            var fieldValue = FieldValue;
+
+            for (var i = 0; i < s.Length; i++)
+            {
+                var c = s[i];
+                if (c >= (uint)fieldValue.Length || !fieldValue[c])
+                {
+                    return i;
+                }
+            }
+
+            return -1;
+        }
     }
 }
