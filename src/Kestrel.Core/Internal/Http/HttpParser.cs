@@ -444,7 +444,7 @@ namespace Microsoft.AspNetCore.Server.Kestrel.Core.Internal.Http
         private unsafe Span<byte> GetUnknownMethod(byte* data, int length, out int methodLength)
         {
             // Enregister array
-            var token = HttpCharacters.Token;
+            var token = HttpCharacters.Token.Span;
             methodLength = 0;
             for (var i = 0; i < length; i++)
             {

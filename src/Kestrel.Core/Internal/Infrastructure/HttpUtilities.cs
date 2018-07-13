@@ -417,16 +417,11 @@ namespace Microsoft.AspNetCore.Server.Kestrel.Core.Internal.Infrastructure
                     BadHttpRequestException.Throw(RequestRejectionReason.InvalidHostHeader, hostText);
                 }
 
-                // Enregister array
-                var hostCharValidity = HttpCharacters.Host;
-                for (var i = 0; i < hostText.Length; i++)
+                var invalid = HttpCharacters.IndexOfInvalidHostChar(hostText);
+                if (invalid >= 0)
                 {
-                    if (!hostCharValidity[hostText[i]])
-                    {
-                        // Tail call
-                        ValidateHostPort(hostText, i);
-                        return;
-                    }
+                    // Tail call
+                    ValidateHostPort(hostText, invalid);
                 }
             }
         }

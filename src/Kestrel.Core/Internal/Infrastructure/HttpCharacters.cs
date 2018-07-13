@@ -9,27 +9,26 @@ namespace Microsoft.AspNetCore.Server.Kestrel.Core.Internal.Infrastructure
     internal static class HttpCharacters
     {
         public static readonly int TableSize = 128;
-        public static readonly bool[] AlphaNumeric;
-        public static readonly bool[] Authority;
-        public static readonly bool[] Token;
-        public static readonly bool[] Host;
-        public static readonly bool[] FieldValue;
+        public static readonly ReadOnlyMemory<bool> Authority;
+        public static readonly ReadOnlyMemory<bool> Token;
+        public static readonly ReadOnlyMemory<bool> Host;
+        public static readonly ReadOnlyMemory<bool> FieldValue;
 
         static HttpCharacters()
         {
             // ALPHA and DIGIT https://tools.ietf.org/html/rfc5234#appendix-B.1
-            AlphaNumeric = new bool[TableSize];
+            var alphaNumeric = new bool[TableSize];
             for (var c = '0'; c <= '9'; c++)
             {
-                AlphaNumeric[c] = true;
+                alphaNumeric[c] = true;
             }
             for (var c = 'A'; c <= 'Z'; c++)
             {
-                AlphaNumeric[c] = true;
+                alphaNumeric[c] = true;
             }
             for (var c = 'a'; c <= 'z'; c++)
             {
-                AlphaNumeric[c] = true;
+                alphaNumeric[c] = true;
             }
 
             // Authority https://tools.ietf.org/html/rfc3986#section-3.2
@@ -41,65 +40,86 @@ namespace Microsoft.AspNetCore.Server.Kestrel.Core.Internal.Infrastructure
             // 127.0.0.1
             // user@host.com
             // user:password@host.com
-            Authority = new bool[TableSize];
-            Array.Copy(AlphaNumeric, Authority, TableSize);
-            Authority[':'] = true;
-            Authority['.'] = true;
-            Authority['['] = true;
-            Authority[']'] = true;
-            Authority['@'] = true;
+            var authority = new bool[TableSize];
+            Array.Copy(alphaNumeric, authority, TableSize);
+            authority[':'] = true;
+            authority['.'] = true;
+            authority['['] = true;
+            authority[']'] = true;
+            authority['@'] = true;
+            Authority = authority;
 
             // Matches Http.Sys
             // Matches RFC 3986 except "*" / "+" / "," / ";" / "=" and "%" HEXDIG HEXDIG which are not allowed by Http.Sys
-            Host = new bool[TableSize];
-            Array.Copy(AlphaNumeric, Host, TableSize);
-            Host['!'] = true;
-            Host['$'] = true;
-            Host['&'] = true;
-            Host['\''] = true;
-            Host['('] = true;
-            Host[')'] = true;
-            Host['-'] = true;
-            Host['.'] = true;
-            Host['_'] = true;
-            Host['~'] = true;
+            var host = new bool[TableSize];
+            Array.Copy(alphaNumeric, host, TableSize);
+            host['!'] = true;
+            host['$'] = true;
+            host['&'] = true;
+            host['\''] = true;
+            host['('] = true;
+            host[')'] = true;
+            host['-'] = true;
+            host['.'] = true;
+            host['_'] = true;
+            host['~'] = true;
+            Host = host;
 
             // tchar https://tools.ietf.org/html/rfc7230#appendix-B
-            Token = new bool[TableSize];
-            Array.Copy(AlphaNumeric, Token, TableSize);
-            Token['!'] = true;
-            Token['#'] = true;
-            Token['$'] = true;
-            Token['%'] = true;
-            Token['&'] = true;
-            Token['\''] = true;
-            Token['*'] = true;
-            Token['+'] = true;
-            Token['-'] = true;
-            Token['.'] = true;
-            Token['^'] = true;
-            Token['_'] = true;
-            Token['`'] = true;
-            Token['|'] = true;
-            Token['~'] = true;
+            var token = new bool[TableSize];
+            Array.Copy(alphaNumeric, token, TableSize);
+            token['!'] = true;
+            token['#'] = true;
+            token['$'] = true;
+            token['%'] = true;
+            token['&'] = true;
+            token['\''] = true;
+            token['*'] = true;
+            token['+'] = true;
+            token['-'] = true;
+            token['.'] = true;
+            token['^'] = true;
+            token['_'] = true;
+            token['`'] = true;
+            token['|'] = true;
+            token['~'] = true;
+            Token = token;
 
             // field-value https://tools.ietf.org/html/rfc7230#section-3.2
-            FieldValue = new bool[TableSize];
+            var fieldValue = new bool[TableSize];
             for (var c = 0x20; c <= 0x7e; c++) // VCHAR and SP
             {
-                FieldValue[c] = true;
+                fieldValue[c] = true;
             }
+            FieldValue = fieldValue;
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static int IndexOfInvalidAuthorityChar(Span<byte> s)
+        public static bool ContainsInvalidAuthorityChar(Span<byte> s)
         {
-            var authority = Authority;
+            var authority = Authority.Span;
 
             for (var i = 0; i < s.Length; i++)
             {
                 var c = s[i];
                 if (c >= (uint)authority.Length || !authority[c])
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static int IndexOfInvalidHostChar(string s)
+        {
+            var host = Host.Span;
+
+            for (var i = 0; i < s.Length; i++)
+            {
+                var c = s[i];
+                if (c >= (uint)host.Length || !host[c])
                 {
                     return i;
                 }
@@ -111,7 +131,7 @@ namespace Microsoft.AspNetCore.Server.Kestrel.Core.Internal.Infrastructure
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static int IndexOfInvalidTokenChar(string s)
         {
-            var token = Token;
+            var token = Token.Span;
 
             for (var i = 0; i < s.Length; i++)
             {
@@ -128,7 +148,7 @@ namespace Microsoft.AspNetCore.Server.Kestrel.Core.Internal.Infrastructure
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static int IndexOfInvalidFieldValueChar(string s)
         {
-            var fieldValue = FieldValue;
+            var fieldValue = FieldValue.Span;
 
             for (var i = 0; i < s.Length; i++)
             {

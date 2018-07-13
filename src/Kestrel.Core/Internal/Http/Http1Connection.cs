@@ -274,7 +274,7 @@ namespace Microsoft.AspNetCore.Server.Kestrel.Core.Internal.Http
 
             // This is not complete validation. It is just a quick scan for invalid characters
             // but doesn't check that the target fully matches the URI spec.
-            if (HttpCharacters.IndexOfInvalidAuthorityChar(target) >= 0)
+            if (HttpCharacters.ContainsInvalidAuthorityChar(target))
             {
                 ThrowRequestTargetRejected(target);
             }
